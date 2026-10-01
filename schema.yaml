@@ -1,0 +1,15 @@
+title: "MILLENNIUMS.AI read-only scan access"
+description: "Creates one read-only user, group and policy so MILLENNIUMS.AI can scan this tenancy. It cannot change anything. Destroy this stack to revoke access."
+schemaVersion: 1.1.0
+version: "v1"
+locale: "en"
+variableGroups:
+  - title: "Filled in for you - no changes needed"
+    variables:
+      - public_key_b64
+      - connect_url
+  - title: "Set by Oracle"
+    visible: false
+    variables:
+      - tenancy_ocid
+      - region
