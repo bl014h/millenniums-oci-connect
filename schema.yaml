@@ -1,13 +1,14 @@
-title: "MILLENNIUMS.AI read-only scan access"
-description: "Creates one read-only user, group and policy so MILLENNIUMS.AI can scan this tenancy. It cannot change anything. Destroy this stack to revoke access."
+title: "Redthread read-only scan access"
+description: "Creates one read-only user, group and policy so Redthread can scan this tenancy. It cannot change anything. Destroy this stack to revoke access."
 schemaVersion: 1.1.0
-version: "v1"
+version: "v3"
 locale: "en"
 variableGroups:
   - title: "Filled in for you - no changes needed"
     variables:
       - public_key_b64
       - connect_url
+      - scan_user_email
   - title: "Set by Oracle"
     visible: false
     variables:
