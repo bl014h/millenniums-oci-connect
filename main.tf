@@ -1,6 +1,6 @@
-# MILLENNIUMS.AI read-only scan access, as an Oracle Resource Manager stack.
+# Redthread read-only scan access, as an Oracle Resource Manager stack.
 # Creates one user in one group holding read-only policy, uploads the workspace's PUBLIC key to it, then
-# tells MILLENNIUMS.AI the new user's OCID. Destroy this stack (or delete the user's API key) to revoke.
+# tells Redthread the new user's OCID. Destroy this stack (or delete the user's API key) to revoke.
 terraform {
   required_version = ">= 1.2"
   required_providers {
@@ -13,6 +13,10 @@ variable "tenancy_ocid" {}
 variable "region" {}
 variable "public_key_b64" {
   description = "The workspace's public key (base64 body, no PEM header). Filled in by the link."
+}
+variable "scan_user_email" {
+  description = "Primary email for the scan user (required by identity domains; it can never sign in)."
+  default     = "cloud-scan@redthreadsec.com"
 }
 variable "connect_url" {
   description = "Where to report the new user's OCID. Filled in by the link."
@@ -44,15 +48,16 @@ provider "oci" {
 resource "oci_identity_group" "scan" {
   provider       = oci.home
   compartment_id = var.tenancy_ocid
-  name           = "MillenniumsCloudScan"
-  description    = "MILLENNIUMS.AI read-only cloud scan"
+  name           = "RedthreadCloudScan"
+  description    = "Redthread read-only cloud scan"
 }
 
 resource "oci_identity_user" "scan" {
   provider       = oci.home
   compartment_id = var.tenancy_ocid
-  name           = "millenniums-cloud-scan"
-  description    = "MILLENNIUMS.AI read-only cloud scan (API key only)"
+  name           = "redthread-cloud-scan"
+  description    = "Redthread read-only cloud scan (API key only)"
+  email          = var.scan_user_email
 }
 
 # API key only: no console password, auth tokens, SMTP or S3-compatible keys.
@@ -75,13 +80,13 @@ resource "oci_identity_user_group_membership" "scan" {
 resource "oci_identity_policy" "scan" {
   provider       = oci.home
   compartment_id = var.tenancy_ocid
-  name           = "MillenniumsCloudScan"
-  description    = "Read-only posture scan by MILLENNIUMS.AI"
+  name           = "RedthreadCloudScan"
+  description    = "Read-only posture scan by Redthread"
   statements = [
-    "Allow group MillenniumsCloudScan to inspect all-resources in tenancy",
-    "Allow group MillenniumsCloudScan to read buckets in tenancy",
-    "Allow group MillenniumsCloudScan to read virtual-network-family in tenancy",
-    "Allow group MillenniumsCloudScan to read users in tenancy",
+    "Allow group RedthreadCloudScan to inspect all-resources in tenancy",
+    "Allow group RedthreadCloudScan to read buckets in tenancy",
+    "Allow group RedthreadCloudScan to read virtual-network-family in tenancy",
+    "Allow group RedthreadCloudScan to read users in tenancy",
   ]
 }
 
@@ -91,7 +96,7 @@ resource "oci_identity_api_key" "scan" {
   key_value = local.public_key
 }
 
-# Report back only once everything exists. MILLENNIUMS.AI verifies with a signed read before it stores
+# Report back only once everything exists. Redthread verifies with a signed read before it stores
 # anything, so a stray or forged report connects nothing.
 data "http" "connect" {
   url             = var.connect_url
@@ -106,5 +111,5 @@ data "http" "connect" {
 }
 
 output "result" {
-  value = data.http.connect.status_code == 202 ? "Done - return to MILLENNIUMS.AI, it connects by itself." : "MILLENNIUMS.AI did not accept the connection (HTTP ${data.http.connect.status_code}): ${data.http.connect.response_body}"
+  value = data.http.connect.status_code == 202 ? "Done - return to Redthread, it connects by itself." : "Redthread did not accept the connection (HTTP ${data.http.connect.status_code}): ${data.http.connect.response_body}"
 }
